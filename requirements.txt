@@ -6,4 +6,4 @@ pandas
 streamlit
 plotly
 xlsxwriter
-io
+requires.io
