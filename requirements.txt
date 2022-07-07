@@ -1,7 +1,5 @@
-# local package
--e .
-
 # external requirements
+pip
 numpy
 matplotlib
 pandas
