@@ -133,10 +133,10 @@ for file in uploaded_files :
 
 #Print results
 st.subheader('Methode 5 microns')
-st.write(result_079microns)
+st.dataframe(result_079microns)
 
 st.subheader('Methode 0.79 microns')
-st.write(result_079microns)
+st.dataframe(result_079microns)
 
     
 #Plot figures    
