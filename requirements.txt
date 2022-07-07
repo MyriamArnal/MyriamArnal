@@ -1,0 +1,11 @@
+# local package
+-e .
+
+# external requirements
+numpy
+matplotlib
+pandas
+streamlit
+plotly
+xlsxwriter
+io
