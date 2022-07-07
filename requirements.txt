@@ -1,4 +1,5 @@
 # external requirements
+pip == 22.1.2
 numpy
 matplotlib
 pandas
