@@ -103,9 +103,9 @@ def CSP_parameters(data):
     return Values
 
 # main
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", page_title="Du coté de chez Swan", page_icon="pics/swan.png")
  
-st.sidebar.title('Prepare CPS')   
+st.sidebar.title('Swan - CPS')   
 st.sidebar.write("Preparation des **données CPS** et calcul des parametres pour la methode 5microns et 0.79 microns . Le programme accepte en entrée les fichiers natifs produit par **blabla** .")
 
 
