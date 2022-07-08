@@ -45,8 +45,13 @@ def save_raw_excel(result_5, result_079, data):
     mydict = {}
     for sample in data :
         name = sample['name']
-        mydict[f"worksheet_{name}"] =  workbook.add_worksheet(name)      
-        mydict[f"worksheet_{name}"].write(1,1,"toto")
+        mydict[f"worksheet_{name}"] =  workbook.add_worksheet(name)  
+        col =0
+        data_sample = sample['data']
+        for df_col in list(data_sample) : 
+            mydict[f"worksheet_{name}"].write(row_i-1,col_i + col,df_col, bold) 
+            mydict[f"worksheet_{name}"].write_column(row_i,col_i + col,data_sample[df_col])
+            col+=1
     workbook.close()
 
     return output
@@ -123,20 +128,36 @@ for file in uploaded_files :
     
     sample_name = file.name.replace('.csv','')
     
-    data_raw = pd.read_csv(file, sep=",", skiprows=11, names=colnames, header=None)
-    tmp = list(zip(data_raw['Diameter']*1000, data_raw['Weight_Height'], data_raw['Weight_LogW'],data_raw['Weight_CumWt']))
-    data = pd.DataFrame(tmp, columns =['Diameter', 'Weight_Height_norm', 'Weight_LogW_norm','Weight_CumWt_norm'])
+    data = pd.read_csv(file, sep=",", skiprows=11, names=colnames, header=None)
+    data.drop(['Empty1' , 'Empty2', 'Empty3' , 'Empty4', 'Empty5'], axis = 1)
+    
+   # tmp = list(zip(data_raw['Diameter']*1000, data_raw['Weight_Height'], data_raw['Weight_LogW'],data_raw['Weight_CumWt']))
+     # data = pd.DataFrame(tmp, columns =['Diameter', 'Weight_Height_norm', 'Weight_LogW_norm','Weight_CumWt_norm'])
+    data['Diameter'] = data['Diameter'] * 1000
+    #tmp = list(zip(data_raw['Diameter']*1000, data_raw['Weight_Height'], data_raw['Weight_LogW'],data_raw['Weight_CumWt']))
+   # data = pd.DataFrame(tmp, columns =['Diameter', 'Weight_Height_norm', 'Weight_LogW_norm','Weight_CumWt_norm'])
+    
+    print(data)
     data_079 = data.loc[data['Diameter'] < 790].copy(deep=False).reset_index()
     
-    data['Weight_Height_norm'] *= 100 / data['Weight_Height_norm'].max() 
-    data['Weight_LogW_norm'] *= 100 / data['Weight_LogW_norm'].max() 
-    data['Weight_CumWt_norm'] *= 100 / data['Weight_CumWt_norm'].max() 
-    
-    data_079['Weight_Height_norm'] *= 100 / data_079['Weight_Height_norm'].max() 
-    data_079['Weight_CumWt_norm'] = data_079['Weight_CumWt_norm'] - data_079['Weight_CumWt_norm'][0]
+    data.insert(1, 'Absorbance_CumNum_norm', 100 * data['Absorbance_CumNum'] / data['Absorbance_CumNum'].max() ) 
+    data.insert(1, 'Absorbance_LogNum_norm', 100 * data['Absorbance_LogNum'] / data['Absorbance_LogNum'].max() ) 
+    data.insert(1, 'Absorbance_Height_norm', 100 * data['Absorbance_Height'] / data['Absorbance_Height'].max() ) 
+    data.insert(1, 'Number_CumSurf_norm', 100 * data['Number_CumSurf']/ data['Number_CumSurf'].max() ) 
+    data.insert(1, 'Number_LogSur_norm', 100 * data['Number_LogSur'] / data['Number_LogSur'].max() ) 
+    data.insert(1, 'Number_Height_norm', 100 * data['Number_Height'] / data['Number_Height'].max() ) 
+    data.insert(1, 'Surface_CumSurf_norm', 100 * data['Surface_CumSurf'] / data['Surface_CumSurf'].max() ) 
+    data.insert(1, 'Surface_LogSur_norm', 100 * data['Surface_LogSur']/ data['Surface_LogSur'].max() ) 
+    data.insert(1, 'Surface_Height_norm', 100 * data['Surface_Height']/ data['Surface_Height'].max() ) 
+    data.insert(1, 'Weight_CumWt_norm', 100 * data['Weight_CumWt']/ data['Weight_CumWt'].max() ) 
+    data.insert(1, 'Weight_LogW_norm', 100 * data['Weight_LogW']/ data['Weight_LogW'].max() ) 
+    data.insert(1, 'Weight_Height_norm', 100 * data['Weight_Height'] / data['Weight_Height'].max() ) 
+ 
+    data_079.insert(1, 'Weight_CumWt_norm', data_079['Weight_CumWt'] - data_079['Weight_CumWt'][0] ) 
     data_079['Weight_CumWt_norm'] *= 100 / data_079['Weight_CumWt_norm'].max() 
-    data_079['Weight_LogW_norm'] *= 100 / data_079['Weight_LogW_norm'].max()
-    
+    data_079.insert(1, 'Weight_LogW_norm', 100 * data_079['Weight_LogW']/ data_079['Weight_LogW'].max() ) 
+    data_079.insert(1, 'Weight_Height_norm', 100 * data_079['Weight_Height']/ data_079['Weight_Height'].max() )
+ 
     result_5microns.loc[sample_name] = CSP_parameters(data)
     result_079microns.loc[sample_name] = CSP_parameters(data_079)
   
@@ -181,22 +202,5 @@ fig.update_layout(
                            
 st.plotly_chart(fig)
 
-#with open("MSE.xlsx", "rb") as file:
-    #st.download_button('Download Data', data = result_5microns,  file_name='CPS.xlsx')  # Defaults to 'application/octet-stream'  
 st.download_button( label="Download Excel workbook", data=save_raw_excel(result_5microns, result_079microns, Data_all).getvalue(), file_name="workbook.xlsx", mime="application/vnd.ms-excel")
-
-
-
-   # data['Weight_Height_norm'] = 100. * data['Weight_Height'] / data['Weight_Height'].max()
-   # data['Weight_LogW_norm'] = 100. * data['Weight_LogW'] / data['Weight_LogW'].max()
-   # data['Weight_CumWt_norm'] = 100. * data['Weight_CumWt'] / data['Weight_CumWt'].max()
-    #data['Surface_Height_norm'] = 100. * data['Surface_Height'] / data['Surface_Height'].max()
-    #data['Surface_LogSur_norm'] = 100. * data['Surface_LogSur'] / data['Surface_LogSur'].max()
-    #data['Surface_CumSurf_norm'] = 100. * data['Surface_CumSurf'] / data['Surface_CumSurf'].max()
-    #data['Number_Height_norm'] = 100. * data['Number_Height'] / data['Number_Height'].max()
-    #data['Number_LogSur_norm'] = 100. * data['Number_LogSur'] / data['Number_LogSur'].max()
-    #data['Number_CumSurf_norm'] = 100. * data['Number_CumSurf'] / data['Number_CumSurf'].max()    
-    #data['Absorbance_Height_norm'] = 100. * data['Absorbance_Height'] / data['Absorbance_Height'].max()
-    #data['Absorbance_LogNum_norm'] = 100. * data['Absorbance_LogNum'] / data['Absorbance_LogNum'].max()
-    #data['Absorbance_CumNum_norm'] = 100. * data['Absorbance_CumNum'] / data['Absorbance_CumNum'].max()  
 
