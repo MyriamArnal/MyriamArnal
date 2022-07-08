@@ -14,29 +14,39 @@ from itertools import groupby
 import linecache
 
 @st.cache
-def save_raw_excel(data):
+def save_raw_excel(result_5, result_079, data):
     output = BytesIO()
     workbook = xlsxwriter.Workbook(output, {'in_memory': True})
-    worksheet_1 = workbook.add_worksheet('Results')
-    
     bold = workbook.add_format({'bold': 1})
-    parameters = data.head()
     
+    # Worksheet result 
+    worksheet_1 = workbook.add_worksheet('Results')
     row = 1
     col = 0
-    col_i =1
-    for param in parameters :
-        worksheet_1.write(row,col_i + col, param, bold)
-        col+=1
-    row +=1
-    for line in data :
-        col = 0 
-        for val in line  :
-            worksheet_1.write(row,col_i + col, val, bold)
-            col+=1
-        row +=1    
-               
+    row_i =3
+    col_i =3
+    
+    parameters = result_5.head()
+    worksheet_1.write(row_i-1, col_i, "Result 5 microns",bold)
+    worksheet_1.write_row(row_i, col_i, parameters)
+    for index in result_5.index :
+        worksheet_1.write(row_i + row ,col_i -1, index)
+        worksheet_1.write_row(row_i + row, col_i , result_5.loc[index])
+        row += 1
         
+    worksheet_1.write(row_i + row, col_i, "Result 0.79 microns", bold)
+    row += 1
+    for index in result_079.index :
+        worksheet_1.write(row_i + row ,col_i -1, index)
+        worksheet_1.write_row(row_i + row, col_i , result_079.loc[index])
+        row += 1
+ 
+    # Worksheet result 
+    mydict = {}
+    for sample in data :
+        name = sample['name']
+        mydict[f"worksheet_{name}"] =  workbook.add_worksheet(name)      
+        mydict[f"worksheet_{name}"].write(1,1,"toto")
     workbook.close()
 
     return output
@@ -76,9 +86,10 @@ def CSP_parameters(data):
     elif len(index_50) > 2 :
         t = np.squeeze(np.abs(index_50 - mode) )
         t_sort = np.argsort(t,axis=0)
-        fwhm = np.abs(index_50[t_sort[:][1]][0] - index_50[t_sort[:][0]][0]) [0]
+        tmp = index_50[t_sort[:][1]] - index_50[t_sort[:][0]]
+        fwhm = tmp 
     else:
-        fwhm = np.Nan 
+        fwhm = np.nan 
     Values = np.append(Values,fwhm)    
     #result = result.append({'Parameter':'FWHM', 'Values':fwhm}, ignore_index=True)
     #FWHM/mode
@@ -88,10 +99,10 @@ def CSP_parameters(data):
 
 # main
 st.set_page_config(layout="wide")
-st.title('Prepare CPS')    
-"""
-Preparation des **données CPS** et calcul des parametres pour la methode 5microns et 0.79 microns . Le programme accepte en entrée les fichiers natifs produit par **blabla** . 
-"""
+ 
+st.sidebar.title('Prepare CPS')   
+st.sidebar.write("Preparation des **données CPS** et calcul des parametres pour la methode 5microns et 0.79 microns . Le programme accepte en entrée les fichiers natifs produit par **blabla** .")
+
 
 uploaded_files = st.sidebar.file_uploader("Choose CPS files",  accept_multiple_files=True)
 colnames = ['Diameter', 'Time','Empty1' , 'Empty2', 'Weight_Height', 'Weight_LogW', 'Weight_CumWt','Empty3', 'Surface_Height', 'Surface_LogSur', 'Surface_CumSurf', 'Empty4', 'Number_Height', 'Number_LogSur', 'Number_CumSurf', 'Empty5', 'Absorbance_Height', 'Absorbance_LogNum', 'Absorbance_CumNum']
@@ -132,11 +143,15 @@ for file in uploaded_files :
     Data_all.append({'name':sample_name, 'data': data})
 
 #Print results
-st.subheader('Methode 5 microns')
-st.dataframe(result_079microns)
 
-st.subheader('Methode 0.79 microns')
-st.dataframe(result_079microns)
+label = st.text_area("Description echantillon", height=4 )
+
+with st.container() :
+    st.write('Methode 5 microns')
+    st.dataframe(result_5microns.style.format("{:.2f}"))
+
+    st.write('Methode 0.79 microns')
+    st.dataframe(result_079microns.style.format("{:.2f}"))
 
     
 #Plot figures    
@@ -168,7 +183,7 @@ st.plotly_chart(fig)
 
 #with open("MSE.xlsx", "rb") as file:
     #st.download_button('Download Data', data = result_5microns,  file_name='CPS.xlsx')  # Defaults to 'application/octet-stream'  
-st.download_button( label="Download Excel workbook", data=save_raw_excel(result_5microns).getvalue(), file_name="workbook.xlsx", mime="application/vnd.ms-excel")
+st.download_button( label="Download Excel workbook", data=save_raw_excel(result_5microns, result_079microns, Data_all).getvalue(), file_name="workbook.xlsx", mime="application/vnd.ms-excel")
 
 
 
