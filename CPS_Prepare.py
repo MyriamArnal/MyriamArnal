@@ -67,15 +67,13 @@ def group_index(data) :
     return ranges
 
 def CSP_parameters(data):
-    # Sur distribution cumulée : Weight_CumWt_norm
-    distr_values = [10.,16.,25.,50.,75.,84.,90.]
+    # Sur distribution cumulée : Weight_CumWt_norm    
+    distr_values = [90.,84.,75.,50.,25.,16.,10.]
     Values = np.interp(distr_values,  data['Weight_CumWt_norm'], data['Diameter'])
-    #zipped =  list(zip(Parameter,Values))    
-    #result = pd.DataFrame(zipped,  columns =['Parameter','Values'])
     Ld = (Values[1]-Values[5])/Values[3]
     Values = np.append(Values,Ld) 
     
-    # Sur distribution cumulée : Weight_Height_norm
+    # Sur distribution : Weight_Height_norm
     mode_index = data['Weight_Height_norm'].idxmax()
     mode = data['Diameter'][mode_index] 
     Values = np.append(Values,mode) 
@@ -96,15 +94,12 @@ def CSP_parameters(data):
     else:
         fwhm = np.nan 
     Values = np.append(Values,fwhm)    
-    #result = result.append({'Parameter':'FWHM', 'Values':fwhm}, ignore_index=True)
-    #FWHM/mode
-    #result = result.append({'Parameter':'FWHM/Mode', 'Values':fwhm/mode}, ignore_index=True)
     Values = np.append(Values,fwhm/mode) 
     return Values
 
 # main
 st.set_page_config(layout="wide", page_title="Du coté de chez Swan", page_icon="pics/swan.png")
-st.sidebar.image("pics/swan.png")  
+st.sidebar.image("pics/swan.png")
 st.sidebar.title('Swan - CPS')   
 st.sidebar.write("Preparation des **données CPS** et calcul des parametres pour la methode 5microns et 0.79 microns . Le programme accepte en entrée les fichiers natifs produit par **blabla** .")
 
@@ -114,7 +109,7 @@ colnames = ['Diameter', 'Time','Empty1' , 'Empty2', 'Weight_Height', 'Weight_Log
 
 Data_all = list()
 
-Parameter = ['D90','D84','D75','D50','D25','D16','D10','Ld','Mode','FWHM','FWHM/Mode']
+Parameter = ['D10','D16','D25','D50','D75','D84','D90','Ld','Mode','FWHM','FWHM/Mode']
 
 index =[]
 for file in uploaded_files : 
@@ -131,13 +126,8 @@ for file in uploaded_files :
     data = pd.read_csv(file, sep=",", skiprows=11, names=colnames, header=None)
     data.drop(['Empty1' , 'Empty2', 'Empty3' , 'Empty4', 'Empty5'], axis = 1)
     
-   # tmp = list(zip(data_raw['Diameter']*1000, data_raw['Weight_Height'], data_raw['Weight_LogW'],data_raw['Weight_CumWt']))
-     # data = pd.DataFrame(tmp, columns =['Diameter', 'Weight_Height_norm', 'Weight_LogW_norm','Weight_CumWt_norm'])
     data['Diameter'] = data['Diameter'] * 1000
-    #tmp = list(zip(data_raw['Diameter']*1000, data_raw['Weight_Height'], data_raw['Weight_LogW'],data_raw['Weight_CumWt']))
-   # data = pd.DataFrame(tmp, columns =['Diameter', 'Weight_Height_norm', 'Weight_LogW_norm','Weight_CumWt_norm'])
     
-    print(data)
     data_079 = data.loc[data['Diameter'] < 790].copy(deep=False).reset_index()
     
     data.insert(1, 'Absorbance_CumNum_norm', 100 * data['Absorbance_CumNum'] / data['Absorbance_CumNum'].max() ) 
@@ -169,17 +159,17 @@ label = st.text_area("Description echantillon", height=4 )
 
 with st.container() :
     st.write('Methode 5 microns')
-    st.dataframe(result_5microns.style.format("{:.2f}"))
+    st.dataframe(result_5microns.style.format("{:.1f}"))
 
     st.write('Methode 0.79 microns')
-    st.dataframe(result_079microns.style.format("{:.2f}"))
+    st.dataframe(result_079microns.style.format("{:.1f}"))
 
     
 #Plot figures    
 fig = make_subplots(rows=3, cols=1,
                     shared_xaxes=True,
                     vertical_spacing=0.02)
-col_scale = px.colors.qualitative.Plotly
+col_scale = px.colors.qualitative.Dark24
 i =0                     
 for sample in Data_all :
     fig.add_trace(go.Scatter( x=sample['data']["Diameter"], y=sample['data']["Weight_Height_norm"], name = sample['name'], legendgroup='group1', line=dict(color=col_scale[i], width=2)),row=3, col=1)
@@ -192,7 +182,7 @@ fig.update_yaxes(title_text="LogW", row=2, col=1)
 fig.update_yaxes(title_text="CumWt", row=1, col=1)
 fig.update_xaxes(type="log", row=1, col=1)
 fig.update_xaxes(type="log", row=2, col=1)
-fig.update_xaxes(title_text="Diameter [microns]", type="log", row=3, col=1)
+fig.update_xaxes(title_text="Diameter [microns]", row=3, col=1)
 
 
 fig.update_layout(
