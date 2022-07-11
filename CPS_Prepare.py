@@ -180,8 +180,6 @@ for sample in Data_all :
 fig.update_yaxes(title_text="Height", row=3, col=1)
 fig.update_yaxes(title_text="LogW", row=2, col=1)
 fig.update_yaxes(title_text="CumWt", row=1, col=1)
-fig.update_xaxes(type="log", row=1, col=1)
-fig.update_xaxes(type="log", row=2, col=1)
 fig.update_xaxes(title_text="Diameter [microns]", row=3, col=1)
 
 
