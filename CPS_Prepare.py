@@ -7,7 +7,7 @@ from plotly.subplots import make_subplots
 import plotly.express as px
 import xlsxwriter
 from io import BytesIO
-
+from scipy.interpolate import interp1d
 
 from operator import itemgetter
 from itertools import groupby
@@ -83,7 +83,10 @@ def CSP_parameters(data):
     index_group_50 = group_index(norm_50[:][0])
     index_50 =[]
     for group in index_group_50:
-        index_50.append(np.interp([50.], data['Weight_Height_norm'][group[0]:group[1]], data['Diameter'][group[0]:group[1]]))
+        #Cubic Spline interpolation
+        f_s = interp1d(data['Weight_Height_norm'][group[0]:group[1]], data['Diameter'][group[0]:group[1]], kind='cubic')
+        index_50.append(f_s([50.]))
+        # index_50.append(np.interp([50.], data['Weight_Height_norm'][group[0]:group[1]], data['Diameter'][group[0]:group[1]]))
     if len(index_50) == 2 :
         fwhm = abs(index_50[1]-index_50[0])[0]
     elif len(index_50) > 2 :
