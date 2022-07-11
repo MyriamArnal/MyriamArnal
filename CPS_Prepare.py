@@ -79,7 +79,7 @@ def CSP_parameters(data):
     Values = np.append(Values,mode) 
     
     #Find where Weight_Height_norm = 50
-    norm_50 = np.where(np.abs(data['Weight_Height_norm'] - 50. ) < 2. )
+    norm_50 = np.where(np.abs(data['Weight_Height_norm'] - 50. ) < 10. )
     index_group_50 = group_index(norm_50[:][0])
     index_50 =[]
     for group in index_group_50:
