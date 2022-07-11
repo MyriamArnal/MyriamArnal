@@ -70,7 +70,7 @@ def CSP_parameters(data):
     # Sur distribution cumulée : Weight_CumWt_norm    
     distr_values = [90.,84.,75.,50.,25.,16.,10.]
     Values = np.interp(distr_values,  data['Weight_CumWt_norm'], data['Diameter'])
-    Ld = (Values[1]-Values[5])/Values[3]
+    Ld = (Values[5]-Values[1])/Values[3]
     Values = np.append(Values,Ld) 
     
     # Sur distribution : Weight_Height_norm
