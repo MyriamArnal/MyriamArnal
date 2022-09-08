@@ -8,3 +8,4 @@ plotly
 xlsxwriter
 requires.io
 scipy
+bokeh
