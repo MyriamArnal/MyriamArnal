@@ -6,7 +6,7 @@ from bokeh.plotting import figure
 import pandas as pd
 import scipy as scipy
 from scipy import optimize
-from lmfit import Model
+from lmfit import Model, Parameter
 from bokeh.palettes import Set2
 
 
@@ -35,7 +35,7 @@ def constant(x, cst):
     """a line"""
     return 0.*x + cst
     
-def _skew_gauss_vec(x, A, x0, w, b):
+def _skew_gauss_vec(x, amp, cen, wid, skew):
     """vectorised version of skewed Gaussian, called by skew_gauss"""
     # From https://perso.ens-rennes.fr/~mwerts/skewed-gaussian-fraser-suzuki.html
     ndeps = np.finfo(x.dtype.type).eps
@@ -43,16 +43,16 @@ def _skew_gauss_vec(x, A, x0, w, b):
     # Through experimentation I found 2*sqrt(machine_epsilon) to be
     # a good safe threshold for switching to the b=0 limit
     # at lower thresholds, numerical rounding errors appear
-    if (abs(b) <= lim0):
-        sg = A * np.exp(-4*np.log(2)*(x-x0)**2/w**2)
+    if (abs(skew) <= lim0):
+        sg = amp * np.exp(-4*np.log(2)*(x-cen)**2/wid**2)
     else:
-        lnterm = 1.0 + ((2*b*(x-x0))/w)
+        lnterm = 1.0 + ((2*skew*(x-cen))/wid)
         sg = np.zeros_like(lnterm)
         sg[lnterm>0] =\
-            A * np.exp(-np.log(2)*(np.log(lnterm[lnterm>0])/b)**2)
+            amp * np.exp(-np.log(2)*(np.log(lnterm[lnterm>0])/skew)**2)
     return sg
 
-def skew_gauss(x, A, x0, w, b):
+def skew_gauss(x,  amp, cen, wid, skew):
     """Fraser-Suzuki skewed Gaussian.
 
     A: peak height, x0: peak position,
@@ -60,17 +60,17 @@ def skew_gauss(x, A, x0, w, b):
     # From https://perso.ens-rennes.fr/~mwerts/skewed-gaussian-fraser-suzuki.html
     
     if type(x)==np.ndarray:
-        sg = _skew_gauss_vec(x, A, x0, w, b)
+        sg = _skew_gauss_vec(x, amp, cen, wid, skew)
     else:
         x = float(x)
         ndeps = np.finfo(type(x)).eps
         lim0 = 2.*np.sqrt(ndeps)
-        if (abs(b) <= lim0):
-            sg = A * np.exp(-4*np.log(2)*(x-x0)**2/w**2)
+        if (abs(skew) <= lim0):
+            sg = amp * np.exp(-4*np.log(2)*(x-cen)**2/wid**2)
         else:
-            lnterm = 1.0 + ((2*b*(x-x0))/w)
+            lnterm = 1.0 + ((2*skew*(x-cen))/wid)
             if (lnterm>0):
-                sg = A * np.exp(-np.log(2)*(np.log(lnterm)/b)**2)
+                sg = amp * np.exp(-np.log(2)*(np.log(lnterm)/skew)**2)
             else:
                 sg = 0
     return sg
@@ -82,10 +82,10 @@ def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
     return df.to_csv().encode('utf-8')    
 
-def fit_model(x_array, y_array, gmodel):
+def fit_model(x_array, y_array, gmodel, params):
     
-    params = gmodel.make_params()    
-    result = gmodel.fit(y_array, params, x=x_array, method='brute')
+    #params = gmodel.make_params()    
+    result = gmodel.fit(y_array, params, x=x_array, method='leastsq')
 
     p1 = figure( title='Data', x_axis_label='t [s]', y_axis_label='leastsq')
     p1.line(x_array, y_array, legend_label='Data', line_width=2)
@@ -96,7 +96,8 @@ def fit_model(x_array, y_array, gmodel):
     comps = result.eval_components(x=x_array)
     names = comps.keys()
     res_dic ={}     
-    if result.redchi < 1025 :
+    
+    if result.redchi < 25 :
         for name in names:
             p1.line(x_array, comps[name], legend_label= name, line_color = 'blue', line_dash='dashed', line_width=2)
             res_dic[name] =  {'Area': np.trapz(comps[name]), 'Amp': result.params[f'{name}amp'].value , 'Sig': result.params[f'{name}wid'].value, 'Cent': result.params[f'{name}cen'].value }
@@ -105,8 +106,10 @@ def fit_model(x_array, y_array, gmodel):
         return result, res_dic 
         
     else : 
-        st.write('bad fit')
-        return None , None 
+        st.write('Using brute force ... wait')
+        result = gmodel.fit(y_array, params, x=x_array, method='brute')
+        
+        return result , None 
 
 
 
@@ -116,7 +119,7 @@ def add_component(dist, index, dic):
     if dist == 'Gaussian':
         dist_label = 'Gauss'
         Amp_range = [0.,100.,5.]
-        Cent_range = [0.001,2.,0.01]
+        Cent_range = [0.001,2.,0.1]
         Sig_range = [0.001,1., 0.01]
             
     if dist == 'LogNormal':
@@ -127,10 +130,10 @@ def add_component(dist, index, dic):
             
     if dist == 'Fraser-Suzuki':
         dist_label = 'FS'
-        Amp_range = [0.,100.,5.]
-        Cent_range = [0.,2.,0.01]
-        Sig_range = [0.,1.,0.01]
-        Skew_range = [0.,3.,0.01]
+        Amp_range = [0.001,100.,5.]
+        Cent_range = [0.001,1.5,0.01]
+        Sig_range = [0.001,1.,0.1]
+        Skew_range = [0.00,3.,0.1]
                           
     name_comp = f'{dist_label}_{index + 1}'
     dic[name_comp] = {}
@@ -151,13 +154,20 @@ def add_component(dist, index, dic):
         gmodel = Model(gaussian, prefix=f'g{index}_')
     if dist == 'Fraser-Suzuki':
         gmodel = Model(skew_gauss, prefix=f'g{index}_') 
-              
-    gmodel.set_param_hint(f'g{index}_amp', value= dic[name_comp]['Amp'] * dic[name_comp]['Sig'] /0.3989,  min=Amp_range[0], max=Amp_range[1], brute_step = Amp_range[2])
-    gmodel.set_param_hint(f'g{index}_cen', value= dic[name_comp]['Cent'], min=Cent_range[0], max=Cent_range[1], brute_step = Cent_range[2])
-    gmodel.set_param_hint(f'g{index}_wid', value= dic[name_comp]['Sig'], min=Sig_range[0], max=Sig_range[1], brute_step = Sig_range[2],  vary=True) 
-    if dist == 'Fraser-Suzuki':    
-        gmodel.set_param_hint(f'g{index}_skew', value= dic[name_comp]['Skew'], min=Skew_range[0], max=Skew_range[1], brute_step = Skew_range[2],  vary=True)  
-    return gmodel, dic  
+   
+    params = gmodel.make_params()    
+    if dist == 'Fraser-Suzuki':  
+        params.add(f'g{index}_amp', value= dic[name_comp]['Amp'],  min=Amp_range[0], max=Amp_range[1], brute_step = Amp_range[2])      
+    else :       
+        params.add(f'g{index}_amp', value= dic[name_comp]['Amp'] * dic[name_comp]['Sig'] /0.3989,  min=Amp_range[0], max=Amp_range[1], brute_step = Amp_range[2])    
+    params.add(f'g{index}_cen', value= dic[name_comp]['Cent'], min=Cent_range[0], max=Cent_range[1], brute_step = Cent_range[2])
+    params.add(f'g{index}_wid', value= dic[name_comp]['Sig'], min=Sig_range[0], max=Sig_range[1], brute_step = Sig_range[2],  vary=True) 
+         
+    if dist == 'Fraser-Suzuki':  
+        params.add(f'g{index}_skew', value= dic[name_comp]['Skew'], min=Skew_range[0], max=Skew_range[1], brute_step = Skew_range[2],  vary=True)  
+    
+    print(params)   
+    return gmodel, dic, params 
 
 ######### Main ############
 
@@ -175,10 +185,11 @@ dic = {}
 
 for i in range(0,number,1):
     if i == 0:
-        gmodel, dic = add_component(option_dist, i, dic)
+        gmodel, dic , params  = add_component(option_dist, i, dic)
     else :
-        g_tmp, dic = add_component(option_dist, i, dic) 
+        g_tmp, dic , par_tmp = add_component(option_dist, i, dic) 
         gmodel += g_tmp
+        params += par_tmp
           
 if uploaded_file is not None:
      colnames = ['Diameter', 'Time','Empty1' , 'Empty2', 'Weight_Height', 'Weight_LogW', 'Weight_CumWt','Empty3', 'Surface_Height', 'Surface_LogSur', 'Surface_CumSurf', 'Empty4', 'Number_Height', 'Number_LogNum', 'Number_CumNum', 'Empty5', 'Absorbance_Height', 'Absorbance_LogAbs', 'Absorbance_CumAbs']
@@ -214,7 +225,7 @@ if uploaded_file is not None:
      st.bokeh_chart(p, use_container_width=True)
      if st.button('Fit'):
 
-         result, dic_result = fit_model(x_array.to_numpy(), y_array.to_numpy(), gmodel)
+         result, dic_result = fit_model(x_array.to_numpy(), y_array.to_numpy(), gmodel, params)
          
          if dic_result == None:
              print('No fit')
