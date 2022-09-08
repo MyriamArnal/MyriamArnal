@@ -9,3 +9,4 @@ xlsxwriter
 requires.io
 scipy
 bokeh
+lmfit
