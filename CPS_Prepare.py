@@ -83,16 +83,14 @@ def CSP_parameters(data):
     index_group_50 = group_index(norm_50[:][0])
     index_50 =[]
     for group in index_group_50:
-<<<<<<< HEAD
         #Cubic Spline interpolation
         f_s = interp1d(data['Weight_Height_norm'][group[0]:group[1]], data['Diameter'][group[0]:group[1]], kind='cubic')
         index_50.append(f_s([50.]))
         # index_50.append(np.interp([50.], data['Weight_Height_norm'][group[0]:group[1]], data['Diameter'][group[0]:group[1]]))
-=======
         f_s = interp1d(data['Weight_Height_norm'][group[0]:group[1]], data['Diameter'][group[0]:group[1]], kind='cubic')
         index_50.append(f_s([50.]))
        # index_50.append(np.interp([50.], data['Weight_Height_norm'][group[0]:group[1]], data['Diameter'][group[0]:group[1]]))
->>>>>>> 7a1fa55d (	modified:   CPS_Prepare.py)
+
     if len(index_50) == 2 :
         fwhm = abs(index_50[1]-index_50[0])[0]
     elif len(index_50) > 2 :
