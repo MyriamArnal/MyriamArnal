@@ -84,7 +84,7 @@ def CSP_parameters(data):
     index_50 =[]
     for group in index_group_50:
         if len(index_50) == 2 :
-        fwhm = abs(index_50[1]-index_50[0])[0]
+            fwhm = abs(index_50[1]-index_50[0])[0]
     elif len(index_50) > 2 :
         t = np.squeeze(np.abs(index_50 - mode) )
         t_sort = np.argsort(t,axis=0)
