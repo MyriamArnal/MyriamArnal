@@ -83,8 +83,10 @@ def CSP_parameters(data):
     index_group_50 = group_index(norm_50[:][0])
     index_50 =[]
     for group in index_group_50:
-        if len(index_50) == 2 :
-            fwhm = abs(index_50[1]-index_50[0])[0]
+        f_s = interp1d(data['Weight_Height_norm'][group[0]:group[1]], data['Diameter'][group[0]:group[1]], kind='cubic')
+        index_50.append(f_s([50.]))
+    if len(index_50) == 2 :
+        fwhm = abs(index_50[1]-index_50[0])[0]
     elif len(index_50) > 2 :
         t = np.squeeze(np.abs(index_50 - mode) )
         t_sort = np.argsort(t,axis=0)
