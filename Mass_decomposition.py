@@ -87,7 +87,7 @@ def fit_model(x_array, y_array, gmodel):
     params = gmodel.make_params()    
     result = gmodel.fit(y_array, params, x=x_array, method='brute')
 
-    p1 = figure( title='Data', x_axis_label='t [s]', y_axis_label='leastsq')
+    p1 = figure( title='Data', x_axis_label='Diametre [nm]', y_axis_label='leastsq')
     p1.line(x_array, y_array, legend_label='Data', line_width=2)
     p1.line(x_array, result.best_fit, legend_label='best fit', line_color = 'indianred', line_dash='dashed', line_width=2)
     
