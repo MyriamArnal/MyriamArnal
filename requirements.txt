@@ -1,12 +1,12 @@
 # external requirements
-pip==22.1.2
 numpy
 matplotlib
 pandas
-streamlit
+streamlit>=1.12.0
 plotly
 xlsxwriter
 requires.io
 scipy
 bokeh
 lmfit
+
