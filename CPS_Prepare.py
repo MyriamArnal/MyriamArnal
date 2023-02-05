@@ -21,7 +21,7 @@ def excel_write_col(worksheet,row,col, data):
     for row_count in range (row,len(data)+row):
         worksheet.write(row_count,col,data[row_count-row])
 
-def save_raw_excel(result_5, result_079, data):
+def save_raw_excel(result_5, result_079, data,comments_text):
     output = BytesIO()
     workbook = xlsxwriter.Workbook(output, {'in_memory': True})
     bold = workbook.add_format({'bold': 1})
@@ -35,6 +35,8 @@ def save_raw_excel(result_5, result_079, data):
     row_i =3 # initial row for tabs
     col_i =3 # initial col for tabs
 
+    worksheet_1.write(0,0,"Comments", title1_format)
+    worksheet_1.write(0,1,comments_text)
     parameters = result_5.head()
     worksheet_1.write(row_i-1, col_i, "Result 5 microns",title1_format)
     worksheet_1.write_row(row_i, col_i, parameters,title2_format)
@@ -162,7 +164,7 @@ def CSP_parameters(data):
 st.set_page_config(layout="wide", page_title="Du coté de chez Swan", page_icon="pics/swan.png")
 st.sidebar.image("pics/swan.png")
 st.sidebar.title('Swan - CPS')
-st.sidebar.write("Preparation des **données CPS** et calcul des parametres pour la methode 5microns et 0.79 microns . Le programme accepte en entrée les fichiers natifs produit par **blabla** .")
+st.sidebar.write("Preparation des **données CPS** et calcul des parametres pour la methode 5microns et 0.79 microns. Le programme accepte en entrée les fichiers natifs csv.")
 
 
 uploaded_files = st.sidebar.file_uploader("Choose CPS files",  accept_multiple_files=True)
@@ -215,7 +217,7 @@ for file in uploaded_files :
 
 #Print results
 
-label = st.text_area("Description echantillon", height=4 )
+comments_text = st.text_area("Description echantillon", height=4 )
 
 with st.container() :
     st.write('Methode 5 microns')
@@ -250,4 +252,4 @@ fig.update_layout(
 
 st.plotly_chart(fig)
 
-st.download_button( label="Download Excel workbook", data=save_raw_excel(result_5microns, result_079microns, Data_all).getvalue(), file_name="workbook.xlsx", mime="application/vnd.ms-excel")
+st.download_button( label="Download Excel workbook", data=save_raw_excel(result_5microns, result_079microns, Data_all,comments_text).getvalue(), file_name="workbook.xlsx", mime="application/vnd.ms-excel")
