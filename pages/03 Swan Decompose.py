@@ -21,7 +21,7 @@ st.markdown(f""" <style>
 
 def lognormal(x, amp, cen, wid):
     """1-d gaussian: gaussian(x, amp, cen, wid)"""
-    return (amp / (np.sqrt(2*np.pi) * wid)) * (np.exp(-(np.log(x)-cen)**2 / (2*wid**2)))/ x
+    return (amp / (np.sqrt(2*np.pi) * wid)) * np.exp(-(np.log(x)-cen)**2 / (2*wid**2))
 
 def gaussian(x, amp, cen, wid):
     """1-d gaussian: gaussian(x, amp, cen, wid)"""
@@ -149,7 +149,7 @@ def add_component(dist, index, dic):
     if dist == 'Gaussian':
         gmodel = Model(gaussian, prefix=f'g{index}_')
     if dist == 'LogNormal':
-        gmodel = Model(gaussian, prefix=f'g{index}_')
+        gmodel = Model(lognormal, prefix=f'g{index}_')
     if dist == 'Fraser-Suzuki':
         gmodel = Model(skew_gauss, prefix=f'g{index}_')
 
@@ -203,18 +203,19 @@ if uploaded_file is not None:
           y_array= data['Weight_LogW_norm']
           label =  'LogW'
 
-     if option_dist == 'LogNormal' :
-          x_array = np.log(x_array)
+     #if option_dist == 'LogNormal' :
+     #      x_array = np.log(x_array)
 
      p = figure( title='Data', x_axis_label='Diameter', y_axis_label=label)
      p.line(x_array, y_array, legend_label='Data', line_width=2)
 
     # total = np.empty([0,])
      col_scale = ['#3288bd', '#99d594', '#fc8d59']
-     print(type(x_array))
      for (component,color) in zip(dic,col_scale) :
         if option_dist == 'Fraser-Suzuki' :
             comp_ = skew_gauss(x_array.to_numpy(), dic[component]['Amp'],  dic[component]['Cent'], dic[component]['Sig'] , dic[component]['Skew'] )
+        elif option_dist == 'LogNormal' :
+            comp_ = gaussian(np.log(x_array), dic[component]['Amp']* dic[component]['Sig'] /0.3989, dic[component]['Cent'], dic[component]['Sig'] )
         else:
             comp_ = gaussian(x_array, dic[component]['Amp']* dic[component]['Sig'] /0.3989, dic[component]['Cent'], dic[component]['Sig'] )
         p.line(x_array, comp_, legend_label=component, line_color =color, line_dash='dashed', line_width=2)
