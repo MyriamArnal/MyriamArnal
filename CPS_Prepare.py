@@ -113,6 +113,7 @@ def save_raw_excel(result_5, result_079, data):
     worksheet_1.insert_chart('J13', chart2, {'x_offset': 0, 'y_offset': 0})
     worksheet_1.insert_chart('R13', chart3, {'x_offset': 0, 'y_offset': 0})
     workbook.close()
+    
 
     return output
 
