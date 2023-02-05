@@ -93,27 +93,23 @@ def save_raw_excel(result_5, result_079, data):
 
     # Add a chart title and some axis labels.
     chart1.set_title ({'name': 'Weight Height Distribution'})
-    chart1.set_x_axis({'name': 'Diameter  [microns]','max':500})
+    chart1.set_x_axis({'name': 'Diameter  [microns]','log_base': 20,  'min':10 ,  'major_gridlines': {'visible': True,'line': {'width': 1.25}}, 'minor_gridlines': {'visible': True,'line': {'width': 1, 'dash_type': 'dash'}}})
     chart1.set_y_axis({'name': 'Normalized counts'})
 
     chart2.set_title ({'name': 'LogW Distribution'})
-    chart2.set_x_axis({'name': 'Diameter  [microns]','max':500})
+    chart2.set_x_axis({'name': 'Diameter  [microns]','log_base': 20, 'min':10, 'major_gridlines': {'visible': True,'line': {'width': 1.25}}, 'minor_gridlines': {'visible': True,'line': {'width': 1, 'dash_type': 'dash'}}})
     chart2.set_y_axis({'name': 'Normalized counts'})
 
     chart3.set_title ({'name': 'Cumulative Weight Distribution'})
-    chart3.set_x_axis({'name': 'Diameter  [microns]','max':500})
+    chart3.set_x_axis({'name': 'Diameter  [microns]','log_base': 20, 'min':10, 'major_gridlines': {'visible': True,'line': {'width': 1.25}}, 'minor_gridlines': {'visible': True,'line': {'width': 1, 'dash_type': 'dash'}}})
     chart3.set_y_axis({'name': 'Normalized counts'})
 
-    # Set an Excel chart style.
-    #chart1.set_style(1)
-    #chart2.set_style(2)
-    #chart3.set_style(3)
     # Insert the chart into the worksheet (with an offset).
     worksheet_1.insert_chart('B13', chart1, {'x_offset': 0, 'y_offset': 0})
     worksheet_1.insert_chart('J13', chart2, {'x_offset': 0, 'y_offset': 0})
     worksheet_1.insert_chart('R13', chart3, {'x_offset': 0, 'y_offset': 0})
     workbook.close()
-    
+
 
     return output
 
