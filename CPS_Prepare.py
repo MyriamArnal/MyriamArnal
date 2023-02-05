@@ -25,6 +25,8 @@ def save_raw_excel(result_5, result_079, data):
     output = BytesIO()
     workbook = xlsxwriter.Workbook(output, {'in_memory': True})
     bold = workbook.add_format({'bold': 1})
+    title1_format = workbook.add_format({'bold': True, 'font_color':'white','bg_color': 'green'})
+    title2_format = workbook.add_format({'bold': True,'bg_color': '#DEECDE'})
 
     # Worksheet result
     worksheet_1 = workbook.add_worksheet('Results')
@@ -34,14 +36,14 @@ def save_raw_excel(result_5, result_079, data):
     col_i =3 # initial col for tabs
 
     parameters = result_5.head()
-    worksheet_1.write(row_i-1, col_i, "Result 5 microns",bold)
-    worksheet_1.write_row(row_i, col_i, parameters)
+    worksheet_1.write(row_i-1, col_i, "Result 5 microns",title1_format)
+    worksheet_1.write_row(row_i, col_i, parameters,title2_format)
     for index in result_5.index :
         worksheet_1.write(row_i + row ,col_i -1, index)
         worksheet_1.write_row(row_i + row, col_i , result_5.loc[index])
         row += 1
 
-    worksheet_1.write(row_i + row, col_i, "Result 0.79 microns", bold)
+    worksheet_1.write(row_i + row, col_i, "Result 0.79 microns", title1_format)
     row += 1
     for index in result_5.index :
         worksheet_1.write(row_i + row ,col_i -1, index)
@@ -63,11 +65,11 @@ def save_raw_excel(result_5, result_079, data):
 
         #Write subset of data in first  tab
         len_data = len(data_sample["Diameter"].values.tolist())
-        worksheet_1.write(row_data -2  ,col_d , name ,bold)
-        worksheet_1.write(row_data -1  ,col_d , "Diameter",bold)
-        worksheet_1.write(row_data -1  ,col_d +1 , "Weight_Height_norm",bold)
-        worksheet_1.write(row_data -1  ,col_d + 2 , "Weight_LogW_norm",bold)
-        worksheet_1.write(row_data -1  ,col_d + 3 , "Weight_CumWt_norm",bold)
+        worksheet_1.write(row_data -2  ,col_d , name ,title1_format)
+        worksheet_1.write(row_data -1  ,col_d , "Diameter",title2_format)
+        worksheet_1.write(row_data -1  ,col_d +1 , "Weight_Height_norm",title2_format)
+        worksheet_1.write(row_data -1  ,col_d + 2 , "Weight_LogW_norm",title2_format)
+        worksheet_1.write(row_data -1  ,col_d + 3 , "Weight_CumWt_norm",title2_format)
         excel_write_col(worksheet_1, row_data,col_d, data_sample["Diameter"].values.tolist())
         excel_write_col(worksheet_1, row_data,col_d + 1, data_sample["Weight_Height_norm"].values.tolist())
         excel_write_col(worksheet_1, row_data,col_d + 2, data_sample["Weight_LogW_norm"].values.tolist())
@@ -86,34 +88,30 @@ def save_raw_excel(result_5, result_079, data):
         mydict[f"worksheet_{name}"] =  workbook.add_worksheet(name)
         col_tabs =0 # col counter for additional tabs
         for df_col in list(data_sample) :
-            mydict[f"worksheet_{name}"].write(row_i-1,col_i + col_tabs,df_col, bold)
+            mydict[f"worksheet_{name}"].write(row_i-1,col_i + col_tabs,df_col, title2_format)
             mydict[f"worksheet_{name}"].write_column(row_i,col_i + col_tabs,data_sample[df_col])
             col_tabs+=1
         col_d +=4
 
     # Add a chart title and some axis labels.
     chart1.set_title ({'name': 'Weight Height Distribution'})
-    chart1.set_x_axis({'name': 'Diameter  [microns]','max':500})
+    chart1.set_x_axis({'name': 'Diameter  [microns]','log_base': 20,  'min':10 ,  'major_gridlines': {'visible': True,'line': {'width': 1.25}}, 'minor_gridlines': {'visible': True,'line': {'width': 1, 'dash_type': 'dash'}}})
     chart1.set_y_axis({'name': 'Normalized counts'})
 
     chart2.set_title ({'name': 'LogW Distribution'})
-    chart2.set_x_axis({'name': 'Diameter  [microns]','max':500})
+    chart2.set_x_axis({'name': 'Diameter  [microns]','log_base': 20, 'min':10, 'major_gridlines': {'visible': True,'line': {'width': 1.25}}, 'minor_gridlines': {'visible': True,'line': {'width': 1, 'dash_type': 'dash'}}})
     chart2.set_y_axis({'name': 'Normalized counts'})
 
     chart3.set_title ({'name': 'Cumulative Weight Distribution'})
-    chart3.set_x_axis({'name': 'Diameter  [microns]','max':500})
+    chart3.set_x_axis({'name': 'Diameter  [microns]','log_base': 20, 'min':10, 'major_gridlines': {'visible': True,'line': {'width': 1.25}}, 'minor_gridlines': {'visible': True,'line': {'width': 1, 'dash_type': 'dash'}}})
     chart3.set_y_axis({'name': 'Normalized counts'})
 
-    # Set an Excel chart style.
-    #chart1.set_style(1)
-    #chart2.set_style(2)
-    #chart3.set_style(3)
     # Insert the chart into the worksheet (with an offset).
     worksheet_1.insert_chart('B13', chart1, {'x_offset': 0, 'y_offset': 0})
     worksheet_1.insert_chart('J13', chart2, {'x_offset': 0, 'y_offset': 0})
     worksheet_1.insert_chart('R13', chart3, {'x_offset': 0, 'y_offset': 0})
     workbook.close()
-    
+
 
     return output
 
